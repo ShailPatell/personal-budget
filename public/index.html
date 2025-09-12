@@ -108,6 +108,11 @@
                 </p>
             </article>
 
+            <article>
+                <h1>D3 Donut Chart</h1>
+                        <div id="d3-container" style="width:400px; height:400px;"></div>
+
+            </article>
         </SECTION>
 
     </main>
@@ -121,6 +126,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js" integrity="sha512-quHCp3WbBNkwLfYUMd+KwBAgpVukJu5MncuQaWXgCrfgcxCJAq/fo+oqrRKOj+UKEmyMCG3tb8RB63W+EmrOBg==" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js" integrity="sha512-s+xg36jbIujB2S2VKfpGmlC3T5V2TF3lY48DX7u2r9XzGzgPsa6wTpOQA7J9iffvdeBN0q9tKzRxVxw1JviZPg==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha512-vc58qvvBdrDR4etbxMdlTt4GBQk1qjvyORR2nrsPsFPyrs+/u5c3+1Ct6upOgdZoIl7eq6k3a1UPDSNAQi/32A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
         var dataSource = {
@@ -164,6 +170,56 @@
 
         getBudget();
     </script>
+
+  <script>
+function d3pie(budgetData) {
+    const width = 400, height = 400, radius = Math.min(width, height)/2;
+
+    const color = d3.scaleOrdinal()
+        .domain(budgetData.map(d => d.title))
+        .range(d3.schemeCategory10);
+
+    const pie = d3.pie().value(d => d.budget);
+    const arc = d3.arc().outerRadius(radius).innerRadius(0);
+
+    const svg = d3.select("#d3-container")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${width/2},${height/2})`);
+
+    const data_ready = pie(budgetData);
+
+    svg.selectAll("path")
+        .data(data_ready)
+        .enter()
+        .append("path")
+        .attr("d", arc)
+        .attr("fill", d => color(d.data.title));
+
+    // Labels with value
+    svg.selectAll("text")
+        .data(data_ready)
+        .enter()
+        .append("text")
+        .text(d => `${d.data.title}: ${d.data.budget}`)
+        .attr("transform", d => {
+            const [x, y] = arc.centroid(d);
+            return `translate(${x},${y})`;
+        })
+        .style("text-anchor", "middle")
+        .style("font-size", "12px")
+        .style("fill", "#fff");
+}
+
+axios.get('http://localhost:3000/budget')
+    .then(res => {
+        d3pie(res.data.myBudget);
+    });
+</script>
+
+   
 
 </body>
 </html>
